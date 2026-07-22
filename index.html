@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinemaya Gidelim Mi? 🍿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-a: #1a102f;
+    --bg-b: #2d124d;
+    --card: #24183e;
+    --card-light: #2f2050;
+    --accent: #ff3b6b;
+    --accent-hover: #e02855;
+    --amber: #ffb703;
+    --text: #ffffff;
+    --muted: #b3a0cd;
+    --border: #443266;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, var(--bg-a), var(--bg-b), #0f081d);
+    background-size: 300% 300%;
+    animation: bgshift 12s ease infinite;
+  }
+  @keyframes bgshift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  canvas#particles, canvas#confetti {
+    position: fixed; inset: 0; pointer-events: none;
+  }
+  canvas#particles { z-index: 1; }
+  canvas#confetti { z-index: 99; }
+
+  .container {
+    position: relative; z-index: 3;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 460px;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card.wide {
+    max-width: 940px;
+    padding: 2.5rem 2rem;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: rgba(255, 183, 3, 0.15);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 1.2rem;
+    border: 1px solid rgba(255, 183, 3, 0.3);
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2.2rem;
+    line-height: 1.3;
+    margin: 0 0 0.6rem;
+    color: #fff;
+    min-height: 2.6em;
+  }
+  .cursor { opacity: 0.6; animation: blink 1s step-end infinite; color: var(--accent); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  p.sub {
+    color: var(--muted);
+    font-size: 1rem;
+    margin: 0 0 2.2rem;
+  }
+
+  .buttons {
+    display: flex; gap: 16px; justify-content: center;
+    position: relative; height: 60px; align-items: center;
+  }
+  button {
+    border: none; border-radius: 999px;
+    font-family: 'Nunito', sans-serif; font-weight: 800;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  #yes {
+    background: var(--accent); color: white;
+    padding: 14px 36px; font-size: 1.1rem;
+    box-shadow: 0 8px 25px rgba(255, 59, 107, 0.4);
+  }
+  #yes:hover { background: var(--accent-hover); transform: translateY(-2px); }
+  #no {
+    background: transparent; border: 2px solid var(--border);
+    color: var(--muted); padding: 14px 28px; font-size: 1rem;
+    position: relative;
+  }
+
+  .meter {
+    margin-top: 1.4rem;
+    font-size: 0.85rem;
+    color: var(--amber);
+    min-height: 1.2em;
+    font-weight: 600;
+  }
+
+  /* Step 2 */
+  .step2 { display: none; text-align: left; }
+  .card.answered .buttons,
+  .card.answered .meter,
+  .card.answered .step1-sub { display: none; }
+  .card.answered .step2 { display: block; animation: entrance 0.6s ease forwards; }
+
+  @keyframes entrance {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step2-header { text-align: center; margin-bottom: 2rem; }
+  .step2-header h2 { font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 0 0 0.5rem; color: #fff; }
+  .step2-header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+
+  .movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+  @media (min-width: 650px) {
+    .movies-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+
+  .movie-card {
+    background: var(--card-light);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .movie-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(255, 59, 107, 0.6);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+  }
+  .movie-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent), 0 12px 28px rgba(255, 59, 107, 0.3);
+    transform: translateY(-6px);
+  }
+  .movie-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--accent);
+    color: white;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    z-index: 3;
+  }
+
+  .poster-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 148%;
+    background: #120a22;
+    overflow: hidden;
+  }
+  .poster-wrapper img {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .poster-fallback {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 12px; text-align: center;
+    background: linear-gradient(180deg, #3b2266 0%, #1a102f 100%);
+    color: var(--amber);
+  }
+  .poster-fallback .icon { font-size: 2.2rem; margin-bottom: 6px; }
+  .poster-fallback .name { font-weight: 800; font-size: 0.85rem; color: #fff; line-height: 1.2; }
+
+  .movie-info {
+    padding: 12px 10px;
+    display: flex; flex-direction: column;
+    flex-grow: 1; justify-content: space-between;
+  }
+  .movie-title {
+    font-weight: 700; font-size: 0.9rem;
+    line-height: 1.2; margin-bottom: 6px; color: #fff;
+  }
+  .movie-genre { font-size: 0.75rem; color: var(--muted); }
+
+  .inputs-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 2rem;
+  }
+  @media (max-width: 500px) {
+    .inputs-row { grid-template-columns: 1fr; }
+  }
+
+  .field { text-align: left; }
+  .field label {
+    display: block; font-size: 0.85rem; font-weight: 700;
+    color: var(--amber); margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border); font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem; color: #fff; background: var(--card-light);
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+
+  #plan-btn {
+    background: var(--accent); color: white; width: 100%;
+    padding: 16px; font-size: 1.1rem; border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(255, 59, 107, 0.4); cursor: pointer;
+  }
+  #plan-btn:hover { background: var(--accent-hover); }
+
+  .confirm { display: none; text-align: center; padding: 1rem 0; }
+  .confirm.show { display: block; animation: entrance 0.5s ease forwards; }
+  .confirm .big { font-family: 'Fraunces', serif; font-size: 2.2rem; color: #fff; margin-bottom: 0.6rem; }
+  .confirm .highlight-movie {
+    font-size: 1.3rem; font-weight: 800; color: var(--amber); margin-bottom: 1.2rem;
+    background: rgba(255, 183, 3, 0.1); padding: 12px 20px; border-radius: 12px; display: inline-block;
+  }
+  .confirm .line { font-size: 1.1rem; color: var(--muted); margin: 6px 0; }
+  .confirm .emoji { font-size: 3rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<canvas id="confetti"></canvas>
+
+<div class="container">
+  <div class="card" id="card">
+    <span class="eyebrow">🎬 SANA BİR TEKLİFİM VAR</span>
+    <h1 id="question"><span id="typed"></span><span class="cursor">|</span></h1>
+    <p class="sub step1-sub">Cevap vermeden önce iyi düşün 👀</p>
+
+    <div class="buttons">
+      <button id="yes">Evet, gidelim! 🍿</button>
+      <button id="no">Hayır</button>
+    </div>
+    <div class="meter" id="meter"></div>
+
+    <div class="step2" id="step2">
+      <div class="step2-header">
+        <h2>Hangi Filme Gidiyoruz? 🍿</h2>
+        <p>Aşağıdan izlemek istediğin filmi, tarihi ve saati seç!</p>
+      </div>
+
+      <div class="movies-grid" id="movies-grid">
+        
+
+        <div class="movie-card" data-title="Odyssey">
+          <div class="poster-wrapper">
+            <div class="poster-fallback"><div class="icon">⚔️</div><div class="name">Odyssey</div></div>
+            <img src="afisler/odyssey.jpg" alt="Odyssey" onerror="this.style.display='none'">
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">Odyssey</div>
+            <div class="movie-genre">Aksiyon • Macera</div>
+          </div>
+        </div>
+
+        <div class="movie-card" data-title="Minyonlar ve Canavarlar">
+          <div class="poster-wrapper">
+            <div class="poster-fallback"><div class="icon">💛</div><div class="name">Minyonlar ve Canavarlar</div></div>
+            <img src="afisler/minyonlar.jpg" alt="Minyonlar" onerror="this.style.display='none'">
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">Minyonlar ve Canavarlar</div>
+            <div class="movie-genre">Animasyon • Komedi</div>
+          </div>
+        </div>
+
+        <div class="movie-card" data-title="Oyuncak Hikayesi 5">
+          <div class="poster-wrapper">
+            <div class="poster-fallback"><div class="icon">🤠</div><div class="name">Oyuncak Hikayesi 5</div></div>
+            <img src="afisler/oyuncak-hikayesi.jpg" alt="Oyuncak Hikayesi 5" onerror="this.style.display='none'">
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">Oyuncak Hikayesi 5</div>
+            <div class="movie-genre">Animasyon • Macera</div>
+          </div>
+        </div>
+
+        <div class="movie-card" data-title="Kötü Ruh: Cehennem Ateşi">
+          <div class="poster-wrapper">
+            <div class="poster-fallback"><div class="icon">🔥</div><div class="name">Kötü Ruh: Cehennem Ateşi</div></div>
+            <img src="afisler/kotu-ruh.jpg" alt="Kötü Ruh" onerror="this.style.display='none'">
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">Kötü Ruh: Cehennem Ateşi</div>
+            <div class="movie-genre">Korku • Fantastik</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inputs-row">
+        <div class="field">
+          <label for="date">📅 Ne zaman gidelim?</label>
+          <input type="date" id="date">
+        </div>
+        <div class="field">
+          <label for="time">⏰ Saat kaçta?</label>
+          <input type="time" id="time" value="19:30">
+        </div>
+      </div>
+
+      <button id="plan-btn">Biletleri Rezerve Et! 🎟️</button>
+
+      <div class="confirm" id="confirm">
+        <div class="emoji">🎉 Biletler Hazır! 🍿</div>
+        <div class="big">Sinema Randevumuz Ayarlandı!</div>
+        <div class="highlight-movie" id="confirm-movie"></div>
+        <div class="line" id="confirm-line1"></div>
+        <div class="line" id="confirm-line2">Seni görmek için sabırsızlanıyorum! ✨</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 🔴 FORMSPREE ÖZEL LINKINIZI IKISININ ARASINA YAZIN
+  const formspreeUrl = "https://formspree.io/f/mrenalkz";
+
+  function sendEmailNotification(movie, date, time, dodgeCount) {
+    if (!formspreeUrl || formspreeUrl.includes("BURAYA_FORMSPREE_ID_YAZIN")) return;
+
+    fetch(formspreeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        Filim_Secimi: movie,
+        Tarih: date,
+        Saat: time,
+        Kacis_Sayisi: dodgeCount,
+        Mesaj: "Sinema davetini kabul etti!"
+      })
+    }).catch(err => console.error("E-posta gönderim hatası:", err));
+  }
+
+  const fullQuestion = "Benimle sinemaya gelir misin?";
+  const typedEl = document.getElementById('typed');
+  let ti = 0;
+  function typeNext() {
+    if (ti <= fullQuestion.length) {
+      typedEl.textContent = fullQuestion.slice(0, ti);
+      ti++;
+      setTimeout(typeNext, 45);
+    }
+  }
+  setTimeout(typeNext, 500);
+
+  const pCanvas = document.getElementById('particles');
+  const pCtx = pCanvas.getContext('2d');
+  function resizeCanvas() {
+    pCanvas.width = window.innerWidth;
+    pCanvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const stars = [];
+  for (let i = 0; i < 30; i++) {
+    stars.push({
+      x: Math.random() * pCanvas.width,
+      y: Math.random() * pCanvas.height,
+      size: 1 + Math.random() * 3,
+      speed: 0.2 + Math.random() * 0.5,
+      opacity: 0.2 + Math.random() * 0.5
+    });
+  }
+  function animateAmbient() {
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+    for (const s of stars) {
+      s.y -= s.speed;
+      if (s.y < -10) { s.y = pCanvas.height + 10; s.x = Math.random() * pCanvas.width; }
+      pCtx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+      pCtx.beginPath();
+      pCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      pCtx.fill();
+    }
+    requestAnimationFrame(animateAmbient);
+  }
+  animateAmbient();
+
+  const noBtn = document.getElementById('no');
+  const yesBtn = document.getElementById('yes');
+  const card = document.getElementById('card');
+  const meter = document.getElementById('meter');
+
+  let scale = 1;
+  let dodgeCount = 0;
+  const noMessages = [
+    "Emin misin?", "Mısır da alırım ama 🍿", "Film çok güzel ama!",
+    "Bir daha düşün...", "Yakalayamıyorsun 😄", "Kader bu, kaçamazsın!",
+    "Tamam tamam, evet de artık 🙂"
+  ];
+
+  function moveNoButton() {
+    const cardRect = card.getBoundingClientRect();
+    const btnRect = noBtn.getBoundingClientRect();
+    const maxX = cardRect.width - btnRect.width - 20;
+    const maxY = 140;
+    const randX = Math.random() * maxX;
+    const randY = Math.random() * maxY - 30;
+
+    noBtn.style.position = 'absolute';
+    noBtn.style.left = randX + 'px';
+    noBtn.style.top = randY + 'px';
+
+    dodgeCount++;
+    scale = Math.min(1 + dodgeCount * 0.12, 2.0);
+    yesBtn.style.transform = `scale(${scale})`;
+
+    const msgIndex = Math.min(dodgeCount - 1, noMessages.length - 1);
+    noBtn.textContent = noMessages[msgIndex];
+    meter.textContent = `Kaçış sayısı: ${dodgeCount} 🏃💨`;
+  }
+  noBtn.addEventListener('mouseenter', moveNoButton);
+  noBtn.addEventListener('click', (e) => { e.preventDefault(); moveNoButton(); });
+  noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoButton(); });
+
+  const cCanvas = document.getElementById('confetti');
+  const cCtx = cCanvas.getContext('2d');
+  cCanvas.width = window.innerWidth;
+  cCanvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    cCanvas.width = window.innerWidth;
+    cCanvas.height = window.innerHeight;
+  });
+
+  function burstConfetti() {
+    const colors = ['#ff3b6b', '#ffb703', '#ffffff', '#9b5de5', '#00f5d4'];
+    const pieces = [];
+    for (let i = 0; i < 150; i++) {
+      pieces.push({
+        x: cCanvas.width / 2,
+        y: cCanvas.height / 3,
+        vx: (Math.random() - 0.5) * 16,
+        vy: Math.random() * -14 - 4,
+        size: 5 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI,
+        vrot: (Math.random() - 0.5) * 0.3,
+        life: 0
+      });
+    }
+    function frame() {
+      cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+      let alive = false;
+      for (const p of pieces) {
+        p.vy += 0.35;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vrot;
+        p.life++;
+        if (p.life < 150) {
+          alive = true;
+          cCtx.save();
+          cCtx.translate(p.x, p.y);
+          cCtx.rotate(p.rot);
+          cCtx.fillStyle = p.color;
+          cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          cCtx.restore();
+        }
+      }
+      if (alive) requestAnimationFrame(frame);
+      else cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+    }
+    frame();
+  }
+
+  yesBtn.addEventListener('click', () => {
+    card.classList.add('answered');
+    card.classList.add('wide');
+    typedEl.textContent = 'Harika Seçim! 🎬';
+    document.querySelector('.cursor').style.display = 'none';
+    burstConfetti();
+
+    const dateInput = document.getElementById('date');
+    const today = new Date();
+    today.setDate(today.getDate() + 1);
+    dateInput.value = today.toISOString().split('T')[0];
+    dateInput.min = new Date().toISOString().split('T')[0];
+  });
+
+  const movieCards = document.querySelectorAll('.movie-card');
+  let selectedMovie = null;
+
+  movieCards.forEach(card => {
+    card.addEventListener('click', () => {
+      movieCards.forEach(m => m.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedMovie = card.dataset.title;
+    });
+  });
+
+  document.getElementById('plan-btn').addEventListener('click', () => {
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+
+    if (!selectedMovie) {
+      alert('Lütfen izlemek istediğin filmi seç 🙂');
+      return;
+    }
+    if (!date || !time) {
+      alert('Lütfen tarih ve saati belirle 🙂');
+      return;
+    }
+
+    const dateObj = new Date(date + 'T00:00:00');
+    const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+
+    document.getElementById('confirm-movie').textContent = `🎬 Film: ${selectedMovie}`;
+    document.getElementById('confirm-line1').textContent = `📅 Tarih: ${dateStr} - ⏰ Saat: ${time}`;
+    
+    // Anında e-posta gönderimi başlat
+    sendEmailNotification(selectedMovie, dateStr, time, dodgeCount);
+
+    document.querySelector('.step2-header').style.display = 'none';
+    document.getElementById('movies-grid').style.display = 'none';
+    document.querySelector('.inputs-row').style.display = 'none';
+    document.getElementById('plan-btn').style.display = 'none';
+    
+    card.classList.remove('wide');
+    document.getElementById('confirm').classList.add('show');
+    burstConfetti();
+  });
+</script>
+
+</body>
+</html>
