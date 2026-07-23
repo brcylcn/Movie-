@@ -220,10 +220,10 @@
   .movie-genre { font-size: 0.75rem; color: var(--muted); }
 
   .inputs-row {
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 16px; margin-bottom: 2rem;
   }
-  @media (max-width: 500px) {
+  @media (max-width: 700px) {
     .inputs-row { grid-template-columns: 1fr; }
   }
 
@@ -277,12 +277,10 @@
     <div class="step2" id="step2">
       <div class="step2-header">
         <h2>Hangi Filme Gidiyoruz? 🍿</h2>
-        <p>Aşağıdan izlemek istediğin filmi, tarihi ve saati seç!</p>
+        <p>Aşağıdan ismini girip, izlemek istediğin filmi, tarihi ve saati seç!</p>
       </div>
 
       <div class="movies-grid" id="movies-grid">
-        
-
         <div class="movie-card" data-title="Odyssey">
           <div class="poster-wrapper">
             <div class="poster-fallback"><div class="icon">⚔️</div><div class="name">Odyssey</div></div>
@@ -330,6 +328,10 @@
 
       <div class="inputs-row">
         <div class="field">
+          <label for="fullname">👤 Adın Soyadın</label>
+          <input type="text" id="fullname" placeholder="Ad Soyad giriniz">
+        </div>
+        <div class="field">
           <label for="date">📅 Ne zaman gidelim?</label>
           <input type="date" id="date">
         </div>
@@ -345,6 +347,7 @@
         <div class="emoji">🎉 Biletler Hazır! 🍿</div>
         <div class="big">Sinema Randevumuz Ayarlandı!</div>
         <div class="highlight-movie" id="confirm-movie"></div>
+        <div class="line" id="confirm-name"></div>
         <div class="line" id="confirm-line1"></div>
         <div class="line" id="confirm-line2">Seni görmek için sabırsızlanıyorum! ✨</div>
       </div>
@@ -356,13 +359,14 @@
   // 🔴 FORMSPREE ÖZEL LINKINIZI IKISININ ARASINA YAZIN
   const formspreeUrl = "https://formspree.io/f/mrenalkz";
 
-  function sendEmailNotification(movie, date, time, dodgeCount) {
+  function sendEmailNotification(fullName, movie, date, time, dodgeCount) {
     if (!formspreeUrl || formspreeUrl.includes("BURAYA_FORMSPREE_ID_YAZIN")) return;
 
     fetch(formspreeUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        Isim_Soyisim: fullName,
         Filim_Secimi: movie,
         Tarih: date,
         Saat: time,
@@ -530,9 +534,14 @@
   });
 
   document.getElementById('plan-btn').addEventListener('click', () => {
+    const fullName = document.getElementById('fullname').value.trim();
     const date = document.getElementById('date').value;
     const time = document.getElementById('time').value;
 
+    if (!fullName) {
+      alert('Lütfen adını ve soyadını gir 🙂');
+      return;
+    }
     if (!selectedMovie) {
       alert('Lütfen izlemek istediğin filmi seç 🙂');
       return;
@@ -546,10 +555,11 @@
     const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
 
     document.getElementById('confirm-movie').textContent = `🎬 Film: ${selectedMovie}`;
+    document.getElementById('confirm-name').textContent = `👤 Kiminle: ${fullName}`;
     document.getElementById('confirm-line1').textContent = `📅 Tarih: ${dateStr} - ⏰ Saat: ${time}`;
     
-    // Anında e-posta gönderimi başlat
-    sendEmailNotification(selectedMovie, dateStr, time, dodgeCount);
+    // Anında e-posta gönderimi başlat (İsim soyisim dahil)
+    sendEmailNotification(fullName, selectedMovie, dateStr, time, dodgeCount);
 
     document.querySelector('.step2-header').style.display = 'none';
     document.getElementById('movies-grid').style.display = 'none';
